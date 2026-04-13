@@ -1,23 +1,20 @@
+const asyncHandler = require("../middleware/asyncHandler");
 const DeviceData = require("../models/DeviceData");
 const deviceSchema = require("../validations/deviceValidation");
 
-// POST data
-exports.addDeviceData = async (req, res, next) => {
-  try {
-    // ✅ Validate
-    const { error } = deviceSchema.validate(req.body);
+exports.addDeviceData = asyncHandler(async (req, res) => {
+  const { error } = deviceSchema.validate(req.body);
 
-    if (error) {
-      return res.status(400).json({
-        message: error.details[0].message,
-      });
-    }
-
-    // ✅ Save
-    const data = await DeviceData.create(req.body);
-    res.status(201).json(data);
-
-  } catch (err) {
-    next(err);
+  if (error) {
+    res.status(400);
+    throw new Error(error.details[0].message);
   }
-};
+
+  const data = await DeviceData.create(req.body);
+
+  // 🔥 SEND REAL-TIME DATA
+  const io = req.app.get("io");
+  io.emit("deviceData", data);
+
+  res.status(201).json(data);
+});
