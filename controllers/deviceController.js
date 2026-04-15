@@ -12,7 +12,7 @@ exports.addDeviceData = asyncHandler(async (req, res) => {
 
   const data = await DeviceData.create(req.body);
 
-  // 🔥 SEND REAL-TIME DATA
+  
   const io = req.app.get("io");
   io.emit("deviceData", data);
 
